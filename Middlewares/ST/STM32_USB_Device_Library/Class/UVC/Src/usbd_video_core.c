@@ -99,25 +99,6 @@ USBD_ClassTypeDef  USBD_UVC =
   USBD_VIDEO_GetDeviceQualifierDescriptor,
 };
 
-///* VIDEO interface class callbacks structure */
-//USBD_ClassTypeDef   USBD_UVC =
-//{
-//  usbd_video_Init,
-//  usbd_video_DeInit,
-//  usbd_video_Setup,
-//  NULL, /* EP0_TxSent */
-//  usbd_video_EP0_RxReady,
-//  usbd_video_DataIn,
-//  usbd_video_DataOut,
-//  usbd_video_SOF,
-//  NULL,
-//  NULL ,
-//  USBD_video_GetFSCfgDesc,
-//#ifdef USB_OTG_HS_CORE
-//  USBD_video_GetFSCfgDesc, /* use same config as per FS */
-//#endif
-//};
-
 
 
 /* USB VIDEO device Configuration Descriptor */
