@@ -51,9 +51,9 @@ void MX_USB_DEVICE_Init(void)
 {
   /* Init Device Library,Add Supported Class and Start the library*/
   USBD_Init(&hUsbDeviceFS, &FS_Desc, DEVICE_FS);
-  USBD_RegisterClass(&hUsbDeviceFS, &USBD_CDC);
-  //USBD_RegisterClass(&hUsbDeviceFS, &USBD_UVC);
-  USBD_CDC_RegisterInterface(&hUsbDeviceFS, &USBD_Interface_fops_FS);
+  USBD_RegisterClass(&hUsbDeviceFS, &USBD_UVC);
+//  USBD_RegisterClass(&hUsbDeviceFS, &USBD_CDC);
+//  USBD_CDC_RegisterInterface(&hUsbDeviceFS, &USBD_Interface_fops_FS);
   /* Verify if the Battery Charging Detection mode (BCD) is used : */
   /* If yes, the USB device is started in the HAL_PCDEx_BCD_Callback */
   /* upon reception of PCD_BCD_DISCOVERY_COMPLETED message. */

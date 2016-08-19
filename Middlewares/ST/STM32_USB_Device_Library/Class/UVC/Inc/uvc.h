@@ -19,7 +19,7 @@
 /*----------------------------------------------------------------------------
  *      Definitions  based on USB_Video_Class_1.1.pdf (www.usb.org)
  *---------------------------------------------------------------------------*/
-
+#define UVC_1_1
 // USB Video device class specification version 1.10
 #ifdef UVC_1_1
 #define UVC_VERSION                             0x0110      // UVC 1.1

@@ -8,6 +8,7 @@
 //#include "usbd_req.h"
 #include "usbd_desc.h"
 
+//#define ISO
 //UVC 1.0 uses only 26 first bytes
 typedef struct  _VideoControl{
   uint8_t    bmHint[2];                      // 2
@@ -35,7 +36,7 @@ typedef struct  _VideoControl{
 #define WIDTH                                         (unsigned int)320
 #define HEIGHT                                        (unsigned int)240
 #define CAM_FPS                                       40
-#define VIDEO_PACKET_SIZE                             (unsigned int) 250//(768+2)//128+130
+#define VIDEO_PACKET_SIZE                             (unsigned int) 64//(768+2)//128+130
 #define MIN_BIT_RATE                                  (unsigned long)(WIDTH*HEIGHT*16*CAM_FPS)//16 bit
 #define MAX_BIT_RATE                                  (unsigned long)(WIDTH*HEIGHT*16*CAM_FPS)
 //#define MAX_FRAME_SIZE                                (unsigned long)(WIDTH*HEIGHT*2)//yuy2
@@ -46,7 +47,7 @@ typedef struct  _VideoControl{
 //#define PACKETS_IN_FRAME                              (unsigned int)(MAX_FRAME_SIZE/(VIDEO_PACKET_SIZE-2) + 1)
 //#define LAST_PACKET_SIZE                              (unsigned int)(MAX_FRAME_SIZE - ((PACKETS_IN_FRAME-1) * (VIDEO_PACKET_SIZE-2)) + 2)
 
-
+#ifdef ISO
 #define USB_VIDEO_DESC_SIZ (unsigned long)(\
 			USB_CONFIGUARTION_DESC_SIZE +\
 		    UVC_INTERFACE_ASSOCIATION_DESC_SIZE +\
@@ -59,8 +60,24 @@ typedef struct  _VideoControl{
 		    VS_FORMAT_UNCOMPRESSED_DESC_SIZE +  \
 		    VS_FRAME_UNCOMPRESSED_DESC_SIZE  +  \
 		    VS_COLOR_MATCHING_DESC_SIZE  +\
-		    USB_INTERFACE_DESC_SIZE +  \
+			USB_INTERFACE_DESC_SIZE + \
 		    USB_ENDPOINT_DESC_SIZE)
+#else
+#define USB_VIDEO_DESC_SIZ (unsigned long)(\
+			USB_CONFIGUARTION_DESC_SIZE +\
+		    UVC_INTERFACE_ASSOCIATION_DESC_SIZE +\
+		    USB_INTERFACE_DESC_SIZE +  \
+		    UVC_VC_INTERFACE_HEADER_DESC_SIZE(1) + \
+		    UVC_CAMERA_TERMINAL_DESC_SIZE(2) + \
+		    UVC_OUTPUT_TERMINAL_DESC_SIZE(0) + \
+		    USB_INTERFACE_DESC_SIZE +   \
+		    UVC_VS_INTERFACE_INPUT_HEADER_DESC_SIZE(1,1) + \
+		    VS_FORMAT_UNCOMPRESSED_DESC_SIZE +  \
+		    VS_FRAME_UNCOMPRESSED_DESC_SIZE  +  \
+		    VS_COLOR_MATCHING_DESC_SIZE  +\
+		    USB_ENDPOINT_DESC_SIZE)
+		/* USB_INTERFACE_DESC_SIZE +  \*/
+#endif
 
 #define VC_TERMINAL_SIZ (unsigned int)(UVC_VC_INTERFACE_HEADER_DESC_SIZE(1) + UVC_CAMERA_TERMINAL_DESC_SIZE(2) + UVC_OUTPUT_TERMINAL_DESC_SIZE(0))
 #define VC_HEADER_SIZ (unsigned int)(UVC_VS_INTERFACE_INPUT_HEADER_DESC_SIZE(1,1) + VS_FORMAT_UNCOMPRESSED_DESC_SIZE + VS_FRAME_UNCOMPRESSED_DESC_SIZE + VS_COLOR_MATCHING_DESC_SIZE)
@@ -141,7 +158,6 @@ typedef struct  _VideoControl{
 
 
 /* bEndpointAddress in Endpoint Descriptor */
-#define USB_OTG_EP_ISOC                          1
 #define USB_ENDPOINT_DIRECTION_MASK            0x80
 #define USB_ENDPOINT_OUT(addr)                 ((addr) | 0x00)
 #define USB_ENDPOINT_IN(addr)                  ((addr) | 0x80)
