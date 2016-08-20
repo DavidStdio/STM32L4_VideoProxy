@@ -41,20 +41,26 @@ uint8_t  VideoCtlUnit = 0;
 uint8_t play_status = 0;//0 - stream stopped, 1 - ready to stream, 2 - stream running
 
 //data array for Video Probe and Commit
+//data array for Video Probe and Commit
 VideoControl    videoCommitControl =
 {
-  {0x00,0x00},                      // bmHint
-  {0x01},                           // bFormatIndex
-  {0x01},                           // bFrameIndex
-  {DBVAL(INTERVAL),},          // dwFrameInterval
-  {0x00,0x00,},                     // wKeyFrameRate
-  {0x00,0x00,},                     // wPFrameRate
-  {0x00,0x00,},                     // wCompQuality
-  {0x00,0x00,},                     // wCompWindowSize
-  {0x00,0x00},                      // wDelay
-  {DBVAL(MAX_FRAME_SIZE)},    // dwMaxVideoFrameSize
-  {0x00, 0x00, 0x00, 0x00},         // dwMaxPayloadTransferSize
-  {0x00, 0x00, 0x00, 0x00},         // dwClockFrequency
+  {0x00,0x00},                      // bmHint                     size: 2     index: 0
+  {0x01},                           // bFormatIndex               size: 3     index: 2
+  {0x01},                           // bFrameIndex                size: 4     index: 3
+  {DBVAL(INTERVAL),},          // dwFrameInterval                 size: 8     index: 4
+  {0x00,0x00,},                     // wKeyFrameRate              size: 10    index: 8
+  {0x00,0x00,},                     // wPFrameRate                size: 12    index: 10
+  {0x00,0x00,},                     // wCompQuality               size: 14    index: 12
+  {0x00,0x00,},                     // wCompWindowSize            size: 16    index: 14
+  {0x00,0x00},                      // wDelay                     size: 18    index: 16
+  {DBVAL(MAX_FRAME_SIZE)},    // dwMaxVideoFrameSize              size: 22    index: 18
+  //davidbo start
+  //{DBVAL(VIDEO_PACKET_SIZE)}, // dwMaxPayloadTransferSize
+  {DBVAL(MAX_FRAME_SIZE)}, // dwMaxPayloadTransferSize  for bulk transfer
+                           // when this value set to VIDEO_PACKET_SIZE host fails to allocate urb buffers
+  {DBVAL(0x2DC6C00)},                  // dwClockFrequency
+  //{0x00, 0x00, 0x00, 0x00},
+  //davidbo end
   {0x00},                           // bmFramingInfo
   {0x00},                           // bPreferedVersion
   {0x00},                           // bMinVersion
@@ -73,8 +79,13 @@ VideoControl    videoProbeControl =
   {0x00,0x00,},                     // wCompWindowSize
   {0x00,0x00},                      // wDelay
   {DBVAL(MAX_FRAME_SIZE)},    // dwMaxVideoFrameSize
-  {0x00, 0x00, 0x00, 0x00},         // dwMaxPayloadTransferSize
-  {0x00, 0x00, 0x00, 0x00},         // dwClockFrequency
+  //davidbo start
+  //{DBVAL(VIDEO_PACKET_SIZE)}, // dwMaxPayloadTransferSize
+  {DBVAL(MAX_FRAME_SIZE)}, // dwMaxPayloadTransferSize  for bulk transfer
+                           // when this value set to VIDEO_PACKET_SIZE host fails to allocate urb buffers
+  {DBVAL(0x2DC6C00)},                  // dwClockFrequency
+  //{0x00, 0x00, 0x00, 0x00},
+  //davidbo end
   {0x00},                           // bmFramingInfo
   {0x00},                           // bPreferedVersion
   {0x00},                           // bMinVersion
@@ -426,13 +437,13 @@ static uint8_t usbd_video_CfgDescBulk[] =
 //    SC_VIDEOSTREAMING,                         // bInterfaceSubClass       2 Video Streaming
 //    PC_PROTOCOL_UNDEFINED,                     // bInterfaceProtocol       0 (protocol undefined)
 //    0x00,
-  /* Standard VS Isochronous Video data Endpoint Descriptor */
+  /* Standard VS Bulk Video data Endpoint Descriptor */
   USB_ENDPOINT_DESC_SIZE,                   // bLength                  7
   USB_DESC_TYPE_ENDPOINT,                   // bDescriptorType          5 (ENDPOINT)
   USB_ENDPOINT_IN(1),                       // bEndpointAddress      0x81 EP 1 IN
   USB_ENDPOINT_TYPE_BULK,                   // bmAttributes             2 bulk transfer type
   WBVAL(VIDEO_PACKET_SIZE),                 // wMaxPacketSize
-  0x01                                   // bInterval                1 one frame interval
+  0x00                                   // bInterval                1 one frame interval
 };
 
 #ifdef ISO

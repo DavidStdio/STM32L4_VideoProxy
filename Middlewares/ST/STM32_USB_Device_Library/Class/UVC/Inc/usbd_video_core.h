@@ -41,7 +41,7 @@ typedef struct  _VideoControl{
 #define MAX_BIT_RATE                                  (unsigned long)(WIDTH*HEIGHT*16*CAM_FPS)
 //#define MAX_FRAME_SIZE                                (unsigned long)(WIDTH*HEIGHT*2)//yuy2
 //#define MAX_FRAME_SIZE                                (unsigned long)(WIDTH*HEIGHT*3/2)//nv12
-#define MAX_FRAME_SIZE                                (unsigned long)(20000)//��������������� ����� �����������
+#define MAX_FRAME_SIZE                                (unsigned long)(76800)//��������������� ����� �����������
 #define INTERVAL                                      (unsigned long)(10000000/CAM_FPS)
 
 //#define PACKETS_IN_FRAME                              (unsigned int)(MAX_FRAME_SIZE/(VIDEO_PACKET_SIZE-2) + 1)
