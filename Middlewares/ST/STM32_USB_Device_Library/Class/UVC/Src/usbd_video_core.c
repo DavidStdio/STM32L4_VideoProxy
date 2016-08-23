@@ -55,9 +55,12 @@ VideoControl    videoCommitControl =
   {0x00,0x00},                      // wDelay                     size: 18    index: 16
   {DBVAL(MAX_FRAME_SIZE)},    // dwMaxVideoFrameSize              size: 22    index: 18
   //davidbo start
-  //{DBVAL(VIDEO_PACKET_SIZE)}, // dwMaxPayloadTransferSize
+#ifdef ISO
+  {DBVAL(VIDEO_PACKET_SIZE)}, // dwMaxPayloadTransferSize
+#else
   {DBVAL(MAX_FRAME_SIZE)}, // dwMaxPayloadTransferSize  for bulk transfer
                            // when this value set to VIDEO_PACKET_SIZE host fails to allocate urb buffers
+#endif
   {DBVAL(0x2DC6C00)},                  // dwClockFrequency
   //{0x00, 0x00, 0x00, 0x00},
   //davidbo end
@@ -80,9 +83,12 @@ VideoControl    videoProbeControl =
   {0x00,0x00},                      // wDelay
   {DBVAL(MAX_FRAME_SIZE)},    // dwMaxVideoFrameSize
   //davidbo start
-  //{DBVAL(VIDEO_PACKET_SIZE)}, // dwMaxPayloadTransferSize
+#ifdef ISO
+  {DBVAL(VIDEO_PACKET_SIZE)}, // dwMaxPayloadTransferSize
+#else
   {DBVAL(MAX_FRAME_SIZE)}, // dwMaxPayloadTransferSize  for bulk transfer
                            // when this value set to VIDEO_PACKET_SIZE host fails to allocate urb buffers
+#endif
   {DBVAL(0x2DC6C00)},                  // dwClockFrequency
   //{0x00, 0x00, 0x00, 0x00},
   //davidbo end
@@ -427,23 +433,13 @@ static uint8_t usbd_video_CfgDescBulk[] =
   0x01,                                 /* bTransferCharacteristics : 1: BT.709 (default) */
   0x04,                                 /* bMatrixCoefficients : 1: BT. 709. */
   
-  /* Standard VS Interface Descriptor  = interface 1 */
-//    USB_INTERFACE_DESC_SIZE,                   // bLength                  9
-//    USB_DESC_TYPE_INTERFACE,             // bDescriptorType          4
-//    USB_UVC_VSIF_NUM,                          // bInterfaceNumber         1 index of this interface
-//    0x00,                                      // bAlternateSetting        1 index of this setting
-//    0x01,                                      // bNumEndpoints            1 one EP used
-//    CC_VIDEO,                                  // bInterfaceClass         14 Video
-//    SC_VIDEOSTREAMING,                         // bInterfaceSubClass       2 Video Streaming
-//    PC_PROTOCOL_UNDEFINED,                     // bInterfaceProtocol       0 (protocol undefined)
-//    0x00,
   /* Standard VS Bulk Video data Endpoint Descriptor */
   USB_ENDPOINT_DESC_SIZE,                   // bLength                  7
   USB_DESC_TYPE_ENDPOINT,                   // bDescriptorType          5 (ENDPOINT)
   USB_ENDPOINT_IN(1),                       // bEndpointAddress      0x81 EP 1 IN
   USB_ENDPOINT_TYPE_BULK,                   // bmAttributes             2 bulk transfer type
   WBVAL(VIDEO_PACKET_SIZE),                 // wMaxPacketSize
-  0x00                                   // bInterval                1 one frame interval
+  0x01                                   // bInterval                1 one frame interval
 };
 
 #ifdef ISO
@@ -545,7 +541,7 @@ static uint8_t  USBD_VIDEO_Setup (USBD_HandleTypeDef  *pdev,
         	play_status = 1;
         } else {
 
-//        	USBD_LL_FlushEP (pdev,USB_ENDPOINT_IN(1));
+        	USBD_LL_FlushEP (pdev,USB_ENDPOINT_IN(1));
         	play_status = 0;
         }
       }
@@ -579,9 +575,9 @@ static uint8_t  USBD_VIDEO_DataIn (USBD_HandleTypeDef *pdev, uint8_t epnum)
 
   static uint16_t packets_in_frame = 1;
   static uint16_t last_packet_size = 0;
+  #define CHUNK_SIZE (VIDEO_PACKET_SIZE -1 )
 
-  uint8_t packet[VIDEO_PACKET_SIZE];
-
+  static uint8_t packet[CHUNK_SIZE];
   static uint8_t tx_enable_flag = 0;
 
   USBD_LL_FlushEP(pdev,USB_ENDPOINT_IN(1));//very important
@@ -597,27 +593,27 @@ static uint8_t  USBD_VIDEO_DataIn (USBD_HandleTypeDef *pdev, uint8_t epnum)
       header[1]^= 1;//toggle bit0 every new frame
       picture_pos = 0;
 
-      packets_in_frame = (last_jpeg_frame_size/ ((uint16_t)VIDEO_PACKET_SIZE -2))+1;//
-      last_packet_size = (last_jpeg_frame_size - ((packets_in_frame-1) * ((uint16_t)VIDEO_PACKET_SIZE-2)) + 2);//+2
+      packets_in_frame = (last_jpeg_frame_size/ ((uint16_t)CHUNK_SIZE -2))+1;//
+      last_packet_size = (last_jpeg_frame_size - ((packets_in_frame-1) * ((uint16_t)CHUNK_SIZE-2)) + 2);//+2
   }
 
   packet[0] = header[0];
   packet[1] = header[1];
 
   //fill payload buffer
-  for (i=2;i<VIDEO_PACKET_SIZE;i++)
+  for (i=2;i<CHUNK_SIZE;i++)
   {
-    packet[i] = frame[picture_pos];
-    picture_pos++;
+	  packet[i] = frame[picture_pos];
+	  picture_pos++;
   }
 
   if (play_status == 2)
   {
     if (packets_cnt< (packets_in_frame - 1))
     {
-    	USBD_LL_Transmit(pdev,USB_ENDPOINT_IN(1), (uint8_t*)&packet, (uint32_t)VIDEO_PACKET_SIZE);
+    	USBD_LL_Transmit(pdev,USB_ENDPOINT_IN(1), (uint8_t*)&packet, (uint32_t)CHUNK_SIZE);
     }
-    else if (tx_enable_flag == 1)//������ ���� �������� ���������//only if transmisson enabled
+    else if (tx_enable_flag == 1)
     {
       //last packet in UVC frame
     	USBD_LL_Transmit(pdev,USB_ENDPOINT_IN(1), (uint8_t*)&packet, (uint32_t)last_packet_size);
@@ -680,12 +676,14 @@ static void VIDEO_Req_GetCurrent(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef 
 
 	USBD_LL_FlushEP(pdev,USB_ENDPOINT_OUT(0));
 //
-//	  if (play_status == 1)
-//	  {
-//		  USBD_LL_FlushEP(pdev,USB_ENDPOINT_IN(1));
-//		  USBD_LL_Transmit(pdev,USB_ENDPOINT_IN(1), (uint8_t*)0x0002, 2);//header
-//		  play_status = 2;
-//	  }
+#ifndef ISO
+	  if (play_status == 0)
+	  {
+		  USBD_LL_FlushEP(pdev,USB_ENDPOINT_IN(1));
+		  USBD_LL_Transmit(pdev,USB_ENDPOINT_IN(1), (uint8_t*)0x0002, 2);//header
+		  play_status = 2;
+	  }
+#endif
 //	  /return USBD_OK;
 
   if(req->wValue == 256)

@@ -23,9 +23,7 @@ static void MX_GPIO_Init(void);
 
 int main(void)
 {
-//	int i = 0, j = 0;
-//	uint8_t buf[] = "pita ";
-//	int bufsize = sizeof buf;
+
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
@@ -44,13 +42,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-//	  ++i;
-//	  if(i == 1000000)
-//	  {
-//		  i = 0;
-//		  CDC_Transmit_FS( &buf[j], 1);
-//		  j= ( j + 1 ) % bufsize;
-//	  }
+
   }
   /* USER CODE END 3 */
 
